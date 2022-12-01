@@ -1,0 +1,66 @@
+
+# TODOS in FILES 
+client.c
+0
+hash_table.c
+3
+neighbour.c
+1
+overview.txt
+0
+packet.c
+0
+peer.c
+6
+requests.c
+1
+server.c
+0
+util.c
+0
+
+
+# TODOS 
+void htable_set(htable **ht, const unsigned char *key, size_t key_len,
+                const unsigned char *value, size_t value_len) {
+    /* TODO IMPLEMENT */
+--
+
+htable *htable_get(htable **ht, const unsigned char *key, size_t key_len) {
+    /* TODO IMPLEMENT */
+--
+
+int htable_delete(htable **ht, const unsigned char *key, size_t key_len) {
+    /* TODO IMPLEMENT */
+--
+
+int peer_is_responsible(uint16_t pred_id, uint16_t peer_id, uint16_t hash_id) {
+    /* TODO IMPLEMENT */
+--
+ */
+int forward(peer *p, packet *pack) {
+    /* TODO IMPLEMENT */
+--
+ */
+int proxy_request(server *srv, int csocket, packet *p, peer *n) {
+    /* TODO IMPLEMENT */
+--
+ */
+int lookup_peer(uint16_t hash_id) {
+    /* TODO IMPLEMENT */
+--
+ */
+int handle_own_request(server *srv, client *c, packet *p) {
+    /* TODO IMPLEMENT */
+--
+ */
+int answer_lookup(packet *p, peer *n) {
+    /* TODO IMPLEMENT */
+--
+        fprintf(stderr, "No idea! Just looking it up!.\n");
+        add_request(rt, hash_id, c->socket, p);
+        lookup_peer(hash_id); // TODO Add this to open lookup requests
+--
+        request *re = existing->open_requests;
+
+        // TODO: Will this work?
