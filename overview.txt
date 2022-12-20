@@ -35,6 +35,7 @@ int htable_delete(htable **ht, const unsigned char *key, size_t key_len) {
     /* TODO IMPLEMENT */
 --
 
+# Bruno
 int peer_is_responsible(uint16_t pred_id, uint16_t peer_id, uint16_t hash_id) {
     /* TODO IMPLEMENT */
 --
