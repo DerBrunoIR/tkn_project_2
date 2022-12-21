@@ -119,8 +119,27 @@ uint32_t peer_get_ip(const peer *p) {
     return ip;
 }
 
+/**
+ * @brief Determine whether a given peer is resposible for a given hashed key.
+ *
+ * @param pred_id The id of the predecessor
+ * @param peer_id The id of the peer to check
+ * @param hash_id The hashed key to check
+ * @return int 1 if the peer is responsible, 0 otherwise
+ */
 int peer_is_responsible(uint16_t pred_id, uint16_t peer_id, uint16_t hash_id) {
-    /* TODO IMPLEMENT */
+	/* DONE IMPLEMENT */
+	if (pred_id < peer_id) {
+		return pred_id < hash_id && hash_id <= peer_id;
+	}
+	else if (peer_id < pred_id) {
+		// zero
+		return pred_id < hash_id || hash_id <= peer_id;
+	}
+	else {
+		// peer is its own predecessor
+		return 1;
+	}
 }
 
 void peer_disconnect(peer *p) {
