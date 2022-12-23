@@ -38,14 +38,15 @@ int forward(peer *p, packet *pack) {
  * @brief Forward a request to the successor.
  *
  * @param srv The server
- * @param csocket The scokent of the client
+ * @param csocket The socket of the client
  * @param p The packet to forward
  * @param n The peer to forward to
  * @return int The callback status
  */
 int proxy_request(server *srv, int csocket, packet *p, peer *n) {
-    /* TODO IMPLEMENT */
-    return CB_REMOVE_CLIENT;
+	/* TODO IMPLEMENT */
+	
+	return CB_REMOVE_CLIENT;
 }
 
 /**
