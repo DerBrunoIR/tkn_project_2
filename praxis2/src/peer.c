@@ -26,7 +26,12 @@ peer *succ = NULL;
  * @return int The status of the sending procedure
  */
 int forward(peer *p, packet *pack) {
-    /* TODO IMPLEMENT */
+	/* DONE IMPLEMENT */
+	size_t pkt_buf_size = 0;
+	unsigned char* pkt_buf = packet_serialize(pack, &pkt_buf_size);
+	int status = sendall(p->socket, pkt_buf, pkt_buf_size);
+	free(pkt_buf);
+	return status;
 }
 
 /**
