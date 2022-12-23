@@ -35,15 +35,17 @@ int htable_delete(htable **ht, const unsigned char *key, size_t key_len) {
     /* TODO IMPLEMENT */
 --
 
-# Bruno
+# Bruno - implemented (untested)
 int peer_is_responsible(uint16_t pred_id, uint16_t peer_id, uint16_t hash_id) {
     /* TODO IMPLEMENT */
 --
  */
+# Bruno - implemented (untested)
 int forward(peer *p, packet *pack) {
     /* TODO IMPLEMENT */
 --
  */
+# Bruno - 
 int proxy_request(server *srv, int csocket, packet *p, peer *n) {
     /* TODO IMPLEMENT */
 --
