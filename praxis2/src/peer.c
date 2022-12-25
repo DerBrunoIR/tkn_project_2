@@ -29,6 +29,9 @@ int forward(peer *p, packet *pack) {
 	/* DONE IMPLEMENT */
 	size_t pkt_buf_size = 0;
 	unsigned char* pkt_buf = packet_serialize(pack, &pkt_buf_size);
+	if (pkt_buf_size == 0) {
+		return -1;
+	}
 	int status = sendall(p->socket, pkt_buf, pkt_buf_size);
 	free(pkt_buf);
 	return status;
@@ -44,9 +47,10 @@ int forward(peer *p, packet *pack) {
  * @return int The callback status
  */
 int proxy_request(server *srv, int csocket, packet *p, peer *n) {
-	/* TODO IMPLEMENT */
-	
-	return CB_REMOVE_CLIENT;
+	/* DONE IMPLEMENT */
+	// peer->socket is 0, -1 or undefined 
+	succ->socket = csocket; // GLOBAL effect
+	return forward(succ, p);
 }
 
 /**
