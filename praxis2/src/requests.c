@@ -40,12 +40,12 @@ void clear_requests(rtable **table, uint16_t hash_id) {
     if (existing != NULL) {
         request *re = existing->open_requests;
 
-        // TODO: Will this work?
+        // DONE: Will this work? Ja
         while (re != NULL) {
-            request *next = re->next;
-            free(re->packet);
-            free(re);
-            re = next;
+            request *next = re->next; // not-in-place Kopie von (request*) re->next
+            free(re->packet); 
+            free(re); // re->next wird dealloziert
+            re = next; // next ist jedoch eine Kopie von re->next und wird somit nicht von der vorherrigen Zeile verändert
         }
         HASH_DEL(*table, existing);
     }

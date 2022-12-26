@@ -16,7 +16,7 @@ rtable **rt = NULL;
 // chord peers
 peer *self = NULL;
 peer *pred = NULL;
-peer *succ = NULL;
+peer *succ = NULL; // succ->socket should be handled as undefined
 
 /**
  * @brief Forward a packet to a peer.
@@ -30,7 +30,7 @@ int forward(peer *p, packet *pack) {
 	size_t pkt_buf_size = 0;
 	unsigned char* pkt_buf = packet_serialize(pack, &pkt_buf_size);
 	if (pkt_buf_size == 0) {
-		return -1;
+		return CB_REMOVE_CLIENT;
 	}
 	int status = sendall(p->socket, pkt_buf, pkt_buf_size);
 	free(pkt_buf);
