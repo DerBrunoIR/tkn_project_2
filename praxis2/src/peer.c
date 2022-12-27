@@ -59,8 +59,18 @@ int proxy_request(server *srv, int csocket, packet *p, peer *n) {
  * @return int The callback status
  */
 int lookup_peer(uint16_t hash_id) {
-    /* TODO IMPLEMENT */
-    return 0;
+	/* TOTEST (Bruno) */
+	packet* pkt = packet_new();
+
+	// build lookup packet
+	pkt->flags = PKT_FLAG_CTRL | PKT_FLAG_LKUP;
+	pkt->hash_id = hash_id;
+
+	// send it to the successor
+	int status = forward(succ, pkt);
+
+	packet_free(pkt);
+	return status;
 }
 
 
@@ -75,10 +85,8 @@ int lookup_peer(uint16_t hash_id) {
 int handle_own_request(server *srv, client *c, packet *p) {
 	/* TOTEST (Bruno) */
 	packet* pkt = packet_new();
-	pkt->key = p->key;
+	strncpy((char*) pkt->key, (const char*) p->key, p->key_len);
 	pkt->key_len = p->key_len;
-	pkt->value = p->value;
-	pkt->value_len = p->value_len;
 
 	// build response packet 
 	if (p->flags & PKT_FLAG_GET) {
@@ -88,16 +96,20 @@ int handle_own_request(server *srv, client *c, packet *p) {
 			packet_free(pkt);
 			return CB_REMOVE_CLIENT;
 		}
-		pkt->value = item->value;
+		strncpy((char*) pkt->value, (const char*) item->value, item->value_len);
 		pkt->value_len = item->value_len;
 	}
 	else if (p->flags & PKT_FLAG_SET) {
 		htable_set(ht, p->key, p->key_len, p->value, p->value_len);
 		pkt->flags |= PKT_FLAG_ACK;
+		strncpy((char*) pkt->value, (const char*) p->value, p->value_len);
+		pkt->value_len = p->value_len;
 	} 
 	else if (p->flags & PKT_FLAG_DEL) {
 		htable_delete(ht, p->key, p->key_len);
 		pkt->flags |= PKT_FLAG_ACK;
+		strncpy((char*) pkt->value, (const char*) p->value, p->value_len);
+		pkt->value_len = p->value_len;
 	}
 
 	// send response 
@@ -124,11 +136,16 @@ int handle_own_request(server *srv, client *c, packet *p) {
 int answer_lookup(packet *p, peer *n) {
 	/* TOTEST (Bruno) */
 	packet* pkt = packet_new();
+
+	// build response packet
 	pkt->flags = PKT_FLAG_CTRL | PKT_FLAG_RPLY;
 	pkt->hash_id = p->hash_id;
 	pkt->node_id = self->node_id;
 	pkt->node_port = self->port;
-	int status = forward(n, pkt);
+	
+	// send response to predecessor
+	int status = forward(pred, pkt); 
+
 	packet_free(pkt);
 	return status;
 }
