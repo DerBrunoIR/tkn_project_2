@@ -33,55 +33,21 @@ Scanning dependencies of target client
 [ 33%] Built target client
 Scanning dependencies of target peer
 [ 41%] Building C object CMakeFiles/peer.dir/src/peer.o
-/mnt/src/src/peer.c: In function 'forward':
-/mnt/src/src/peer.c:28:19: warning: unused parameter 'p' [-Wunused-parameter]
- int forward(peer *p, packet *pack) {
-                   ^
-/mnt/src/src/peer.c:28:30: warning: unused parameter 'pack' [-Wunused-parameter]
- int forward(peer *p, packet *pack) {
-                              ^~~~
 /mnt/src/src/peer.c: In function 'proxy_request':
-/mnt/src/src/peer.c:41:27: warning: unused parameter 'srv' [-Wunused-parameter]
+/mnt/src/src/peer.c:52:27: warning: unused parameter 'srv' [-Wunused-parameter]
  int proxy_request(server *srv, int csocket, packet *p, peer *n) {
                            ^~~
-/mnt/src/src/peer.c:41:36: warning: unused parameter 'csocket' [-Wunused-parameter]
- int proxy_request(server *srv, int csocket, packet *p, peer *n) {
-                                    ^~~~~~~
-/mnt/src/src/peer.c:41:53: warning: unused parameter 'p' [-Wunused-parameter]
- int proxy_request(server *srv, int csocket, packet *p, peer *n) {
-                                                     ^
-/mnt/src/src/peer.c:41:62: warning: unused parameter 'n' [-Wunused-parameter]
+/mnt/src/src/peer.c:52:62: warning: unused parameter 'n' [-Wunused-parameter]
  int proxy_request(server *srv, int csocket, packet *p, peer *n) {
                                                               ^
-/mnt/src/src/peer.c: In function 'lookup_peer':
-/mnt/src/src/peer.c:52:26: warning: unused parameter 'hash_id' [-Wunused-parameter]
- int lookup_peer(uint16_t hash_id) {
-                          ^~~~~~~
 /mnt/src/src/peer.c: In function 'handle_own_request':
-/mnt/src/src/peer.c:65:32: warning: unused parameter 'srv' [-Wunused-parameter]
+/mnt/src/src/peer.c:95:32: warning: unused parameter 'srv' [-Wunused-parameter]
  int handle_own_request(server *srv, client *c, packet *p) {
                                 ^~~
-/mnt/src/src/peer.c:65:45: warning: unused parameter 'c' [-Wunused-parameter]
- int handle_own_request(server *srv, client *c, packet *p) {
-                                             ^
-/mnt/src/src/peer.c:65:56: warning: unused parameter 'p' [-Wunused-parameter]
- int handle_own_request(server *srv, client *c, packet *p) {
-                                                        ^
-/mnt/src/src/peer.c: In function 'answer_lookup':
-/mnt/src/src/peer.c:77:27: warning: unused parameter 'p' [-Wunused-parameter]
- int answer_lookup(packet *p, peer *n) {
-                           ^
-/mnt/src/src/peer.c:77:36: warning: unused parameter 'n' [-Wunused-parameter]
- int answer_lookup(packet *p, peer *n) {
-                                    ^
 /mnt/src/src/peer.c: In function 'handle_packet_ctrl':
-/mnt/src/src/peer.c:122:45: warning: unused parameter 'c' [-Wunused-parameter]
+/mnt/src/src/peer.c:207:45: warning: unused parameter 'c' [-Wunused-parameter]
  int handle_packet_ctrl(server *srv, client *c, packet *p) {
                                              ^
-/mnt/src/src/peer.c: In function 'forward':
-/mnt/src/src/peer.c:30:1: warning: control reaches end of non-void function [-Wreturn-type]
- }
- ^
 [ 50%] Building C object CMakeFiles/peer.dir/src/server.o
 [ 58%] Building C object CMakeFiles/peer.dir/src/packet.o
 [ 66%] Building C object CMakeFiles/peer.dir/src/util.o
@@ -112,24 +78,6 @@ Scanning dependencies of target peer
 /mnt/src/src/hash_table.c:8:66: warning: unused parameter 'key_len' [-Wunused-parameter]
  htable *htable_get(htable **ht, const unsigned char *key, size_t key_len) {
                                                                   ^~~~~~~
-/mnt/src/src/hash_table.c: In function 'htable_delete':
-/mnt/src/src/hash_table.c:12:28: warning: unused parameter 'ht' [-Wunused-parameter]
- int htable_delete(htable **ht, const unsigned char *key, size_t key_len) {
-                            ^~
-/mnt/src/src/hash_table.c:12:53: warning: unused parameter 'key' [-Wunused-parameter]
- int htable_delete(htable **ht, const unsigned char *key, size_t key_len) {
-                                                     ^~~
-/mnt/src/src/hash_table.c:12:65: warning: unused parameter 'key_len' [-Wunused-parameter]
- int htable_delete(htable **ht, const unsigned char *key, size_t key_len) {
-                                                                 ^~~~~~~
-/mnt/src/src/hash_table.c: In function 'htable_get':
-/mnt/src/src/hash_table.c:10:1: warning: control reaches end of non-void function [-Wreturn-type]
- }
- ^
-/mnt/src/src/hash_table.c: In function 'htable_delete':
-/mnt/src/src/hash_table.c:14:1: warning: control reaches end of non-void function [-Wreturn-type]
- }
- ^
 [ 83%] Building C object CMakeFiles/peer.dir/src/neighbour.o
 [ 91%] Building C object CMakeFiles/peer.dir/src/requests.o
 [100%] Linking C executable peer

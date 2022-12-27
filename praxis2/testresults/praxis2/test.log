@@ -1,6 +1,6 @@
 .
 ----------------------------------------------------------------------
-Ran 1 test in 2.892s
+Ran 1 test in 5.249s
 
 OK
 FFFFFFFFFFF
@@ -13,7 +13,7 @@ Traceback (most recent call last):
     return fun(*args, **kwargs)
   File "/home/bruno/22 Winter Semester/TKNRN/tkn_project_2/praxis2/venv/lib/python3.10/site-packages/rnvs_tb/blocks/block5.py", line 270, in test_forward_lookup
     self.fail(f"Peer did not forward lookup to successor! Stdout: {out}, Stderr:{err}")
-AssertionError: Peer did not forward lookup to successor! Stdout: bytearray(b''), Stderr:bytearray(b'Starting server. Press any key to exit.\nDecoded control packet header: \n\tJOIN: 0\n\tNOTIFY: 0\n\tSTABILIZE: 0\n\tLOOKUP: 1\n\tREPLY: 0\nHandling control packet...\n')
+AssertionError: Peer did not forward lookup to successor! Stdout: bytearray(b''), Stderr:bytearray(b'Starting server. Press any key to exit.\nDecoded control packet header: \n\tJOIN: 0\n\tNOTIFY: 0\n\tSTABILIZE: 0\n\tLOOKUP: 1\n\tREPLY: 0\nHandling control packet...\nsendall: Bad file descriptor\n')
 
 ======================================================================
 FAIL: test_get_full_circle (rnvs_tb.blocks.block5.PeerTestCase)
@@ -24,7 +24,7 @@ Traceback (most recent call last):
     return fun(*args, **kwargs)
   File "/home/bruno/22 Winter Semester/TKNRN/tkn_project_2/praxis2/venv/lib/python3.10/site-packages/rnvs_tb/blocks/block5.py", line 341, in test_get_full_circle
     self.fail(f"Did not receive a Lookup request within timeout! Stdout: {out}, Stderr:{err}")
-AssertionError: Did not receive a Lookup request within timeout! Stdout: bytearray(b''), Stderr:bytearray(b'Starting server. Press any key to exit.\nDecoded packet header: \n\tACK: 0\n\tGET: 1\n\tSET: 0\n\tDEL: 0\n\tKey Length: 23 Bytes\n\tValue Length: 0 Bytes\nHash id: 21608\nNo idea! Just looking it up!.\n172.20.0.3: Connection closed.\n')
+AssertionError: Did not receive a Lookup request within timeout! Stdout: bytearray(b''), Stderr:bytearray(b'Starting server. Press any key to exit.\nDecoded packet header: \n\tACK: 0\n\tGET: 1\n\tSET: 0\n\tDEL: 0\n\tKey Length: 23 Bytes\n\tValue Length: 0 Bytes\nHash id: 21608\nNo idea! Just looking it up!.\nsendall: Bad file descriptor\n172.28.0.3: Connection closed.\n')
 
 ======================================================================
 FAIL: test_student_ring_long_fixed_buffer (rnvs_tb.blocks.block5.PeerTestCase)
@@ -203,7 +203,7 @@ Traceback (most recent call last):
     return fun(*args, **kwargs)
   File "/home/bruno/22 Winter Semester/TKNRN/tkn_project_2/praxis2/venv/lib/python3.10/site-packages/rnvs_tb/blocks/block5.py", line 230, in test_trigger_get_minimal
     self.fail(f"Did not receive a GET request within timeout! Stdout: {out}, Stderr:{err}")
-AssertionError: Did not receive a GET request within timeout! Stdout: bytearray(b''), Stderr:bytearray(b"Starting server. Press any key to exit.\nDecoded packet header: \n\tACK: 0\n\tGET: 1\n\tSET: 0\n\tDEL: 0\n\tKey Length: 12 Bytes\n\tValue Length: 0 Bytes\nHash id: 18281\nSuccessor\'s business.\n")
+AssertionError: Did not receive a GET request within timeout! Stdout: bytearray(b''), Stderr:bytearray(b"Starting server. Press any key to exit.\nDecoded packet header: \n\tACK: 0\n\tGET: 1\n\tSET: 0\n\tDEL: 0\n\tKey Length: 12 Bytes\n\tValue Length: 0 Bytes\nHash id: 18281\nSuccessor\'s business.\n172.28.0.3: Connection closed.\n")
 
 ======================================================================
 FAIL: test_trigger_lookup_minimal (rnvs_tb.blocks.block5.PeerTestCase)
@@ -214,9 +214,9 @@ Traceback (most recent call last):
     return fun(*args, **kwargs)
   File "/home/bruno/22 Winter Semester/TKNRN/tkn_project_2/praxis2/venv/lib/python3.10/site-packages/rnvs_tb/blocks/block5.py", line 193, in test_trigger_lookup_minimal
     self.fail(msg=f"Did not receive a lookup request within timeout! Stdout: {out}, Stderr:{err}")
-AssertionError: Did not receive a lookup request within timeout! Stdout: bytearray(b''), Stderr:bytearray(b'Starting server. Press any key to exit.\nDecoded packet header: \n\tACK: 0\n\tGET: 1\n\tSET: 0\n\tDEL: 0\n\tKey Length: 18 Bytes\n\tValue Length: 0 Bytes\nHash id: 21618\nNo idea! Just looking it up!.\n172.20.0.3: Connection closed.\n')
+AssertionError: Did not receive a lookup request within timeout! Stdout: bytearray(b''), Stderr:bytearray(b'Starting server. Press any key to exit.\nDecoded packet header: \n\tACK: 0\n\tGET: 1\n\tSET: 0\n\tDEL: 0\n\tKey Length: 18 Bytes\n\tValue Length: 0 Bytes\nHash id: 21618\nNo idea! Just looking it up!.\nsendall: Bad file descriptor\n172.28.0.3: Connection closed.\n')
 
 ----------------------------------------------------------------------
-Ran 11 tests in 78.873s
+Ran 11 tests in 89.578s
 
 FAILED (failures=11)
