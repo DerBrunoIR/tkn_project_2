@@ -9,6 +9,9 @@
 #include "server.h"
 #include "util.h"
 
+// my includes
+#include <arpa/inet.h>
+
 // actual underlying hash table
 htable **ht = NULL;
 rtable **rt = NULL;
@@ -48,8 +51,14 @@ int forward(peer *p, packet *pack) {
  */
 int proxy_request(server *srv, int csocket, packet *p, peer *n) {
 	/* TOTEST (Bruno) */
-	n->socket = csocket;
-	return forward(n, p);
+	size_t pkt_buf_size = 0;
+	unsigned char* pkt_buf = packet_serialize(p, &pkt_buf_size);
+	if (pkt_buf_size <= 0) {
+		return CB_REMOVE_CLIENT;
+	}
+	int status = sendall(csocket, pkt_buf, pkt_buf_size);
+	free(pkt_buf);
+	return status;
 }
 
 /**
@@ -65,6 +74,7 @@ int lookup_peer(uint16_t hash_id) {
 	// build lookup packet
 	pkt->flags = PKT_FLAG_CTRL | PKT_FLAG_LKUP;
 	pkt->hash_id = hash_id;
+	pkt->node_id = self->node_id;
 
 	// send it to the successor
 	int status = forward(succ, pkt);
@@ -140,8 +150,12 @@ int answer_lookup(packet *p, peer *n) {
 	// build response packet
 	pkt->flags = PKT_FLAG_CTRL | PKT_FLAG_RPLY;
 	pkt->hash_id = p->hash_id;
-	pkt->node_id = self->node_id;
-	pkt->node_port = self->port;
+	pkt->node_id = n->node_id;
+	pkt->node_port = n->port;
+	if (inet_aton(n->hostname, (struct in_addr*) &pkt->node_ip)==0) {
+		packet_free(pkt);
+		return CB_REMOVE_CLIENT;
+	}
 	
 	// send response to predecessor
 	int status = forward(pred, pkt); 
