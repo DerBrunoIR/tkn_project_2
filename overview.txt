@@ -68,6 +68,7 @@ int answer_lookup(packet *p, peer *n) {
         add_request(rt, hash_id, c->socket, p);
         lookup_peer(hash_id); // TODO Add this to open lookup requests
 --
+# Bruno - answered question, yes it will probably work
         request *re = existing->open_requests;
 
         // TODO: Will this work?
