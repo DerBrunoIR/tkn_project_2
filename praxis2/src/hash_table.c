@@ -7,8 +7,10 @@ void htable_set(htable **ht, const unsigned char *key, size_t key_len,
 
 htable *htable_get(htable **ht, const unsigned char *key, size_t key_len) {
     /* TODO IMPLEMENT */
+    // return NULL on error
 }
 
 int htable_delete(htable **ht, const unsigned char *key, size_t key_len) {
     /* TODO IMPLEMENT */
+    // return -1 on error
 }

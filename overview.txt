@@ -45,7 +45,7 @@ int forward(peer *p, packet *pack) {
     /* TODO IMPLEMENT */
 --
  */
-# Bruno - 
+# Bruno - schwierig 
 int proxy_request(server *srv, int csocket, packet *p, peer *n) {
     /* TODO IMPLEMENT */
 --
@@ -54,6 +54,7 @@ int lookup_peer(uint16_t hash_id) {
     /* TODO IMPLEMENT */
 --
  */
+# Bruno - implemented (untested)
 int handle_own_request(server *srv, client *c, packet *p) {
     /* TODO IMPLEMENT */
 --

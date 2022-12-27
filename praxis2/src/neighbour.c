@@ -128,7 +128,7 @@ uint32_t peer_get_ip(const peer *p) {
  * @return int 1 if the peer is responsible, 0 otherwise
  */
 int peer_is_responsible(uint16_t pred_id, uint16_t peer_id, uint16_t hash_id) {
-	/* DONE IMPLEMENT */
+	/* TOTEST (Bruno) */
 	if (pred_id < peer_id) {
 		return pred_id < hash_id && hash_id <= peer_id;
 	}

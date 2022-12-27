@@ -26,10 +26,10 @@ peer *succ = NULL; // succ->socket should be handled as undefined
  * @return int The status of the sending procedure
  */
 int forward(peer *p, packet *pack) {
-	/* DONE IMPLEMENT */
+	/* TOTEST (Bruno) */
 	size_t pkt_buf_size = 0;
 	unsigned char* pkt_buf = packet_serialize(pack, &pkt_buf_size);
-	if (pkt_buf_size == 0) {
+	if (pkt_buf_size <= 0) {
 		return CB_REMOVE_CLIENT;
 	}
 	int status = sendall(p->socket, pkt_buf, pkt_buf_size);
@@ -47,10 +47,9 @@ int forward(peer *p, packet *pack) {
  * @return int The callback status
  */
 int proxy_request(server *srv, int csocket, packet *p, peer *n) {
-	/* DONE IMPLEMENT */
-	// peer->socket is 0, -1 or undefined 
-	succ->socket = csocket; // GLOBAL effect
-	return forward(succ, p);
+	/* TOTEST (Bruno) */
+	n->socket = csocket;
+	return forward(n, p);
 }
 
 /**
@@ -64,17 +63,55 @@ int lookup_peer(uint16_t hash_id) {
     return 0;
 }
 
+
 /**
  * @brief Handle a client request we are resonspible for.
  *
  * @param srv The server
  * @param c The client
- * @param p The packet
+ * @param p The (data) packet
  * @return int The callback status
  */
 int handle_own_request(server *srv, client *c, packet *p) {
-    /* TODO IMPLEMENT */
-    return CB_REMOVE_CLIENT;
+	/* TOTEST (Bruno) */
+	packet* pkt = packet_new();
+	pkt->key = p->key;
+	pkt->key_len = p->key_len;
+	pkt->value = p->value;
+	pkt->value_len = p->value_len;
+
+	// build response packet 
+	if (p->flags & PKT_FLAG_GET) {
+		htable* item = htable_get(ht, p->key, p->key_len);
+		pkt->flags |= PKT_FLAG_RPLY;
+		if (item == NULL) {
+			packet_free(pkt);
+			return CB_REMOVE_CLIENT;
+		}
+		pkt->value = item->value;
+		pkt->value_len = item->value_len;
+	}
+	else if (p->flags & PKT_FLAG_SET) {
+		htable_set(ht, p->key, p->key_len, p->value, p->value_len);
+		pkt->flags |= PKT_FLAG_ACK;
+	} 
+	else if (p->flags & PKT_FLAG_DEL) {
+		htable_delete(ht, p->key, p->key_len);
+		pkt->flags |= PKT_FLAG_ACK;
+	}
+
+	// send response 
+	int status;
+	size_t pkt_buffer_length = 0;
+	unsigned char* pkt_buffer = packet_serialize(pkt, &pkt_buffer_length);
+	if (pkt_buffer_length == 0) {
+		status = CB_REMOVE_CLIENT;
+	} else {
+		status = sendall(c->socket, pkt_buffer, pkt_buffer_length);
+	}
+	free(pkt);
+	free(pkt_buffer);
+	return status;
 }
 
 /**
@@ -85,8 +122,15 @@ int handle_own_request(server *srv, client *c, packet *p) {
  * @return int The callback status
  */
 int answer_lookup(packet *p, peer *n) {
-    /* TODO IMPLEMENT */
-    return CB_REMOVE_CLIENT;
+	/* TOTEST (Bruno) */
+	packet* pkt = packet_new();
+	pkt->flags = PKT_FLAG_CTRL | PKT_FLAG_RPLY;
+	pkt->hash_id = p->hash_id;
+	pkt->node_id = self->node_id;
+	pkt->node_port = self->port;
+	int status = forward(n, pkt);
+	packet_free(pkt);
+	return status;
 }
 
 /**
