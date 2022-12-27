@@ -3,22 +3,23 @@
 client.c
 0
 hash_table.c
-3
+0/0/3
 neighbour.c
-1
+1/0/1
 overview.txt
 0
 packet.c
 0
 peer.c
-6
+6/0/6
 requests.c
-1
+1/0/1
 server.c
 0
 util.c
 0
 
+**annotation [implemented]/[tested]/[todos]
 
 # TODOS 
 # Coldmitry ->
