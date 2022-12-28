@@ -53,38 +53,38 @@ int main() {
 
 	// test 1
 	printf("Test %d \n", 1);
-	htable_set(ht, key1, key1len, val1, val1len);
-	assertItem(htable_get(ht, key1, key1len), key1, key1len, val1, val1len);
-	assert(htable_get(ht, key2, key2len) == NULL);
-	assert(htable_get(ht, key3, key3len) == NULL);
+	htable_set(ht, (const unsigned char*) key1, key1len, (const unsigned char*) val1, val1len);
+	assertItem(htable_get(ht, (const unsigned char*) key1, key1len), key1, key1len, val1, val1len);
+	assert(htable_get(ht, (const unsigned char*) key2, key2len) == NULL);
+	assert(htable_get(ht, (const unsigned char*) key3, key3len) == NULL);
 
-	// test 2, add value
+	// test 2, add (const unsigned char*) value
 	printf("Test %d \n", 2);
-	htable_set(ht, key2, key2len, val2, val2len);
-	assertItem(htable_get(ht, key1, key1len), key1, key1len, val1, val1len);
-	assertItem(htable_get(ht, key2, key2len), key2, key2len, val2, val2len);
-	assert(htable_get(ht, key3, key3len) == NULL);
+	htable_set(ht, (const unsigned char*) key2, key2len, (const unsigned char*) val2, val2len);
+	assertItem(htable_get(ht, (const unsigned char*) key1, key1len), key1, key1len, val1, val1len);
+	assertItem(htable_get(ht, (const unsigned char*) key2, key2len), key2, key2len, val2, val2len);
+	assert(htable_get(ht, (const unsigned char*) key3, key3len) == NULL);
 
-	// test 3, add value
+	// test 3, add (const unsigned char*) value
 	printf("Test %d \n", 3);
-	htable_set(ht, key3, key3len, val3, val3len);
-	assertItem(htable_get(ht, key1, key1len), key1, key1len, val1, val1len);
-	assertItem(htable_get(ht, key2, key2len), key2, key2len, val2, val2len);
-	assertItem(htable_get(ht, key3, key3len), key3, key3len, val3, val3len);
+	htable_set(ht, (const unsigned char*) key3, key3len, (const unsigned char*) val3, val3len);
+	assertItem(htable_get(ht, (const unsigned char*) key1, key1len), key1, key1len, val1, val1len);
+	assertItem(htable_get(ht, (const unsigned char*) key2, key2len), key2, key2len, val2, val2len);
+	assertItem(htable_get(ht, (const unsigned char*) key3, key3len), key3, key3len, val3, val3len);
 
-	// test 4, delte value
+	// test 4, delte (const unsigned char*) value
 	printf("Test %d \n", 4);
-	htable_delete(ht, key1, key1len);
-	assert(htable_get(ht, key1, key1len) == NULL);
-	assertItem(htable_get(ht, key2, key2len), key2, key2len, val2, val2len);
-	assertItem(htable_get(ht, key3, key3len), key3, key3len, val3, val3len);
+	htable_delete(ht, (const unsigned char*) key1, key1len);
+	assert(htable_get(ht, (const unsigned char*) key1, key1len) == NULL);
+	assertItem(htable_get(ht, (const unsigned char*) key2, key2len), key2, key2len, val2, val2len);
+	assertItem(htable_get(ht, (const unsigned char*) key3, key3len), key3, key3len, val3, val3len);
 
-	// test 5, set value alread in ht
+	// test 5, set (const unsigned char*) value alread in ht
 	printf("Test %d \n", 5);
-	htable_set(ht, key3, key3len, val2, val2len);
-	assert(htable_get(ht, key1, key1len) == NULL);
-	assertItem(htable_get(ht, key2, key2len), key2, key2len, val2, val2len);
-	assertItem(htable_get(ht, key3, key3len), key3, key3len, val2, val2len);
+	htable_set(ht, (const unsigned char*) key3, key3len, (const unsigned char*) val2, val2len);
+	assert(htable_get(ht, (const unsigned char*) key1, key1len) == NULL);
+	assertItem(htable_get(ht, (const unsigned char*) key2, key2len), key2, key2len, val2, val2len);
+	assertItem(htable_get(ht, (const unsigned char*) key3, key3len), key3, key3len, val2, val2len);
 	
 	printf("Done, all tests successfull");
 	return 0;
