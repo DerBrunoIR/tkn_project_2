@@ -31,8 +31,8 @@ void item_free(htable* item) {
 void assertItem(htable* item, char* key, int key_len, char* val, int val_len) {
 	assert(item->key_len == key_len);
 	assert(item->value_len == val_len);
-	assert(strncmp((char*) item->key, key, key_len));
-	assert(strncmp((char*) item->value, val, val_len));
+	assert(strncmp((char*) item->key, key, key_len) == 0);
+	assert(strncmp((char*) item->value, val, val_len) == 0);
 }
 
 int main() {
