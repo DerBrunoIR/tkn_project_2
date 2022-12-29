@@ -12,6 +12,8 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+// client copy is a copy of all functions except main of "src/client.c".
+
 unsigned char *read_stdin(size_t *len);
 int connect_socket(char *hostname, char *port);
 

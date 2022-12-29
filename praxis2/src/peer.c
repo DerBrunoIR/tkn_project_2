@@ -11,7 +11,7 @@
 
 // my includes
 #include <arpa/inet.h>
-#include "client.h"
+#include "client_copy.h"
 #include "itoa.h"
 
 // actual underlying hash table
