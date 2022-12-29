@@ -26,6 +26,11 @@ int main() {
 	assert(peer_is_responsible(UINT16_MAX-5, 50,  51) == 0);
 	assert(peer_is_responsible(UINT16_MAX-5, 50,  123) == 0);
 	assert(peer_is_responsible(UINT16_MAX-5, 50, UINT16_MAX-5) == 0);
+	// test 5, special cases
+	printf("test %d\n", 5);
+	assert(peer_is_responsible(1, 10, 2000) == 0);
+	assert(peer_is_responsible(10, 1025, 2000) == 0);
+
 
 	printf("all tests successfully");
 }

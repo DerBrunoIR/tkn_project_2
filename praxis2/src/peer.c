@@ -11,6 +11,8 @@
 
 // my includes
 #include <arpa/inet.h>
+#include "client.h"
+#include "itoa.h"
 
 // actual underlying hash table
 htable **ht = NULL;
@@ -30,13 +32,22 @@ peer *succ = NULL; // succ->socket should be handled as undefined
  */
 int forward(peer *p, packet *pack) {
 	/* TOTEST (Bruno) */
+	
+	int status = CB_REMOVE_CLIENT;
+	int socket = p->socket;
+	if (socket < 1) {
+		char* port_str;
+		itoa(&port_str, p->port);
+		 socket = connect_socket(p->hostname, port_str);
+		free(port_str);
+	}
 	size_t pkt_buf_size = 0;
 	unsigned char* pkt_buf = packet_serialize(pack, &pkt_buf_size);
-	if (pkt_buf_size <= 0) {
-		return CB_REMOVE_CLIENT;
-	}
-	int status = sendall(p->socket, pkt_buf, pkt_buf_size);
+	if (pkt_buf_size > 0)
+		status = sendall(socket, pkt_buf, pkt_buf_size);
+
 	free(pkt_buf);
+	close(socket);
 	return status;
 }
 
@@ -51,13 +62,20 @@ int forward(peer *p, packet *pack) {
  */
 int proxy_request(server *srv, int csocket, packet *p, peer *n) {
 	/* TOTEST (Bruno) */
+	int status = CB_REMOVE_CLIENT;
+	if (csocket < 1) {
+		char* port_str;
+		itoa(&port_str, n->port);
+		csocket = connect_socket(n->hostname, port_str);
+		free(port_str);
+	}
 	size_t pkt_buf_size = 0;
 	unsigned char* pkt_buf = packet_serialize(p, &pkt_buf_size);
-	if (pkt_buf_size <= 0) {
-		return CB_REMOVE_CLIENT;
-	}
-	int status = sendall(csocket, pkt_buf, pkt_buf_size);
+	if (pkt_buf_size > 0)
+		status = sendall(csocket, pkt_buf, pkt_buf_size);
+
 	free(pkt_buf);
+	close(csocket);
 	return status;
 }
 
