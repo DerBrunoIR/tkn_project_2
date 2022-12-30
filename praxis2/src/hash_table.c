@@ -21,16 +21,11 @@ htable* htable_create(const unsigned char *key, size_t key_len, const unsigned c
 
 void htable_set(htable **ht, const unsigned char *key, size_t key_len,
                 const unsigned char *value, size_t value_len) {
-	/* TOTEST (Bruno) */
-	htable* item = htable_create(key, key_len, value, value_len);
-	htable_delete(ht, key, key_len);
-	HASH_ADD_KEYPTR(hh, *ht, key, key_len, item);
 }
 
 htable *htable_get(htable **ht, const unsigned char *key, size_t key_len) {
 	/* TOTEST (Bruno) */
 	htable* item = NULL;
-	HASH_FIND(hh, *ht, key, key_len, item);
 	return item;
 }
 
