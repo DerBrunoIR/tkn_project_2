@@ -45,7 +45,7 @@ peer *peer_from_packet(const packet *pack) {
 
     inet_ntop(AF_INET, &pack_addr, fakehostname, INET_ADDRSTRLEN);
 
-    p->hostname = fakehostname;
+    p->hostname = fakehostname; // fakehostname ist tatsächlich der Hoastname, den wir benutzen sollen!
     p->port = pack->node_port;
     return p;
 }
