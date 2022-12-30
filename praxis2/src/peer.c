@@ -11,6 +11,8 @@
 
 // my includes
 #include <arpa/inet.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 #include "client_copy.h"
 #include "itoa.h"
 
@@ -26,20 +28,22 @@ peer *succ = NULL; // succ->socket should be handled as undefined
 /**
  * @brief Forward a packet to a peer.
  *
- * @param peer The peer to forward the request to
+ * @param peer The peer to forward the request to. If peer->socket is < 1 a connection is established via peer->hostname
  * @param pack The packet to forward
  * @return int The status of the sending procedure
  */
 int forward(peer *p, packet *pack) {
-	/* TOTEST (Bruno) */
+	/* DONE (Bruno) */
 	
 	int status = CB_REMOVE_CLIENT;
 	int socket = p->socket;
 	if (socket < 1) {
 		char* port_str;
 		itoa(&port_str, p->port);
-		 socket = connect_socket(p->hostname, port_str);
+		socket = connect_socket(p->hostname, port_str);
 		free(port_str);
+		 if (socket < 1) 
+			 return -1;
 	}
 	size_t pkt_buf_size = 0;
 	unsigned char* pkt_buf = packet_serialize(pack, &pkt_buf_size);
@@ -93,7 +97,10 @@ int lookup_peer(uint16_t hash_id) {
 	pkt->flags = PKT_FLAG_CTRL | PKT_FLAG_LKUP;
 	pkt->hash_id = hash_id;
 	pkt->node_id = self->node_id;
-
+	if (inet_aton(self->hostname, (struct in_addr*) &pkt->node_ip) == 0) { // TODO ensure network byte order
+		packet_free(pkt);
+		return CB_REMOVE_CLIENT;
+	}
 	// send it to the successor
 	int status = forward(succ, pkt);
 
@@ -161,24 +168,27 @@ int handle_own_request(server *srv, client *c, packet *p) {
  * @param n The peer
  * @return int The callback status
  */
-int answer_lookup(packet *p, peer *n) {
+int answer_lookup(packet *pkt_rcvd, peer *peer_from) {
 	/* TOTEST (Bruno) */
-	packet* pkt = packet_new();
+	packet* pkt_snd = packet_new();
 
 	// build response packet
-	pkt->flags = PKT_FLAG_CTRL | PKT_FLAG_RPLY;
-	pkt->hash_id = p->hash_id;
-	pkt->node_id = n->node_id;
-	pkt->node_port = n->port;
-	if (inet_aton(n->hostname, (struct in_addr*) &pkt->node_ip)==0) {
-		packet_free(pkt);
+	pkt_snd->flags = PKT_FLAG_CTRL | PKT_FLAG_RPLY;
+	pkt_snd->hash_id = pkt_rcvd->hash_id; // requested hash
+	pkt_snd->node_id = peer_from->node_id; // node_id who can resolve the given hash
+	pkt_snd->node_port = peer_from->port;  // port
+	if (inet_aton(peer_from->hostname, (struct in_addr*) &pkt_snd->node_ip)==0) { // ensure network byte order
+		packet_free(pkt_snd);
 		return CB_REMOVE_CLIENT;
 	}
 	
-	// send response to predecessor
-	int status = forward(pred, pkt); 
+	// send response to packet origin
+	peer peer_to = {0};
+	peer_to.port = pkt_snd->node_port;
+	peer_to.hostname = inet_ntoa(*(struct in_addr*) &pkt_snd->node_ip); // die Sterne sind wichtig
+	int status = forward(&peer_to, pkt_snd);
 
-	packet_free(pkt);
+	packet_free(pkt_snd);
 	return status;
 }
 
