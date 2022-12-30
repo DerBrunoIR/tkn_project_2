@@ -21,11 +21,10 @@ htable* htable_create(const unsigned char *key, size_t key_len, const unsigned c
 
 void htable_set(htable **ht, const unsigned char *key, size_t key_len,
                 const unsigned char *value, size_t value_len) {
-	// TODO
 }
 
 htable *htable_get(htable **ht, const unsigned char *key, size_t key_len) {
-	// TODO
+	/* TOTEST (Bruno) */
 	htable* item = NULL;
 	return item;
 }
