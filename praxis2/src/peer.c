@@ -26,17 +26,44 @@ peer *pred = NULL;
 peer *succ = NULL; // succ->socket should be handled as undefined
 
 
-/**
- * convert the string representation of an ipv4 address to uint32 in network byte order
- **/
-uint32_t ipv4str_to_net_uint32(char* hostanme) {
-	struct in_addr addr = {0};
-	if (inet_aton(self->hostname, &addr) == 0) {
-		return 0;
-	}
-	return htonl(addr.s_addr);
+// ----------------
+// Hilfsfunktionen
+// ----------------
+
+// convert packet into specific byte order
+void packet_host_byte_order(packet* p) {
+	p->hash_id = ntohs(p->hash_id);
+	p->key_len = ntohs(p->key_len);
+	p->value_len = ntohl(p->key_len);
+	p->node_port = ntohs(p->node_port);
+	p->node_ip = ntohl(p->node_ip);
 }
 
+void packet_network_byte_order(packet* p) {
+	p->hash_id = htons(p->hash_id);
+	p->key_len = htons(p->key_len);
+	p->value_len = htonl(p->key_len);
+	p->node_port = htons(p->node_port);
+	p->node_ip = htonl(p->node_ip);
+}
+
+int send_packet(int socket, packet* pkt) {
+	fprintf(stderr, "sending packet to socket %d\n", socket);
+	if (socket < 1) {
+		fprintf(stderr, "peer.c::send_packet::received closed socket!\n");
+		return -1;
+	}
+	size_t pkt_buf_size = 0;
+	unsigned char* pkt_buf = packet_serialize(pkt, &pkt_buf_size);
+	int status = sendall(socket, pkt_buf, pkt_buf_size);
+	fprintf(stderr, "packet_buffer = \"%s\"\n", pkt_buf);
+	free(pkt_buf);
+	return status;
+}
+
+// -----------------
+// Vorgabe
+// -----------------
 
 /**
  * @brief Forward a packet to a peer.
@@ -46,32 +73,12 @@ uint32_t ipv4str_to_net_uint32(char* hostanme) {
  * @return int The status of the sending procedure
  */
 int forward(peer *p, packet *pack) {
+	fprintf(stderr, "forwarding packet to peer %s\n", p->hostname);
 	/* DONE (Bruno) */
-	
-	int socket = p->socket;
-	char* port_str;
-	itoa(&port_str, p->port);
-	socket = connect_socket(p->hostname, port_str);
-	free(port_str);
-	if (socket < 1) {
-		fprintf(stderr, "peer::Forward::Could not connect socket to %s:%d!",p->hostname, p->port);
-		return CB_REMOVE_CLIENT;
-	}
-
-	int status = CB_REMOVE_CLIENT;
-	size_t pkt_buf_size = 0;
-	unsigned char* pkt_buf = packet_serialize(pack, &pkt_buf_size);
-	fprintf(stderr, "Forward packet to %s: \"%s\"\n", p->hostname, pkt_buf);
-	if (pkt_buf_size > 0) {
-		status = sendall(socket, pkt_buf, pkt_buf_size);
-	}
-	else {
-		fprintf(stderr, "peer::Forward::pkt_buf_size <= 0");
-	}
-
-	free(pkt_buf);
-	close(socket);
-	return status;
+	peer_connect(p);
+	send_packet(p->socket, pack); 
+	peer_disconnect(p);
+	return CB_OK;
 }
 
 /**
@@ -84,58 +91,22 @@ int forward(peer *p, packet *pack) {
  * @return int The callback status
  */
 int proxy_request(server *srv, int csocket, packet *p, peer *n) {
+	fprintf(stderr, "proxy reqeuest from socket %d to %s\n", csocket, n->hostname);
 	/* DONE (Bruno) */
-	unsigned char* pkt_buf;
-	size_t pkt_buf_size;
-	char* port_str;
-	int status = 0;
-
-	if (csocket < 1) {
-		fprintf(stderr, "peer::proxy_request::client socket is closed!\n");
-		return CB_REMOVE_CLIENT;
-	}
-
-	// proxy request 
-	itoa(&port_str, n->port);
-	int socket_proxy = connect_socket(n->hostname, port_str);
-	free(port_str);
-	if (socket_proxy < 1) {
-		fprintf(stderr, "peer::Forward::Could not connect socket to %s:%d!",n->hostname, n->port);
-		return CB_REMOVE_CLIENT;
-	}
-
-	pkt_buf_size = 0;
-	pkt_buf = packet_serialize(p, &pkt_buf_size);
-	if (pkt_buf_size == 0) {
-		fprintf(stderr, "peer::proxy_request::Serialized packet has length 0!\n");
-		free(pkt_buf);
-		return CB_REMOVE_CLIENT;
-	}
 	
-	status = sendall(socket_proxy, pkt_buf, pkt_buf_size); 
-	free(pkt_buf);
-	if (status < 0) {
-		fprintf(stderr, "peer::proxy_request::Could not send packet to client!\n");
-		return CB_REMOVE_CLIENT;
-	}
+	// do request and receive response
+	peer_connect(n);
+	send_packet(n->socket, p);
+	size_t pkt_buf_size = 0;
+	unsigned char* pkt_buf = recvall(n->socket, &pkt_buf_size);
+	peer_disconnect(n);
 
-	// receive response 
-	pkt_buf = recvall(socket_proxy, &pkt_buf_size);
-	close(socket_proxy);
-	if (pkt_buf == NULL) {
-		fprintf(stderr, "peer::proxy_request::Didn't received response from %s:%d!\n", n->hostname, n->port);
-		return CB_REMOVE_CLIENT;
-	}
-
-	// send proxied response to client 
-	status = sendall(csocket, pkt_buf, pkt_buf_size); 
+	// proxy response 
+	sendall(csocket, pkt_buf, pkt_buf_size);
+	fprintf(stderr, "packet_buffer = \"%s\"\n", pkt_buf);
 	free(pkt_buf);
-	if (status < 0) {
-		fprintf(stderr, "peer::proxy_request::Could not send packet to client!");
-		return CB_REMOVE_CLIENT;
-	}
 	
-	return status;
+	return CB_OK;
 }
 
 /**
@@ -145,23 +116,23 @@ int proxy_request(server *srv, int csocket, packet *p, peer *n) {
  * @return int The callback status
  */
 int lookup_peer(uint16_t hash_id) {
+	fprintf(stderr, "lookup peer with hash_id == %d\n", hash_id);
 	/* DONE (Bruno) */
 	// build lookup packet
 	packet* pkt = packet_new();
 	pkt->flags     = PKT_FLAG_CTRL | PKT_FLAG_LKUP;
-	pkt->hash_id   = htons(hash_id);
-	pkt->node_id   = htons(self->node_id);
-	pkt->node_port = htons(self->port);
-	pkt->node_ip   = ipv4str_to_net_uint32(self->hostname);
-	if (pkt->node_ip == 0) {
-		packet_free(pkt);
-		return CB_REMOVE_CLIENT;
-	}
-	// send it to the successor
-	int status = forward(succ, pkt);
+	pkt->hash_id   = hash_id;
+	pkt->node_id   = self->node_id;
+	pkt->node_port = self->port;
+	pkt->node_ip   = peer_get_ip(self);
+
+	// send it to the Successor
+	peer_connect(succ);
+	send_packet(succ->socket, pkt);
+	peer_disconnect(succ);
 
 	packet_free(pkt);
-	return status;
+	return CB_OK;
 }
 
 
@@ -174,58 +145,37 @@ int lookup_peer(uint16_t hash_id) {
  * @return int The callback status
  */
 int handle_own_request(server *srv, client *c, packet *pkt_rcvd) {
+	fprintf(stderr, "handle own request on socket %d\n", c->socket);
 	/* TOTEST (Bruno) */
-	if (pkt_rcvd->key_len == 0) {
-		fprintf(stderr, "peer::handle_own_request::Received empty request!\n");
-		return CB_REMOVE_CLIENT;
-	}
-
 	// build response packet 
 	packet* pkt_snd = packet_new();
+	pkt_snd->value_len = 0;
 	pkt_snd->key_len = pkt_rcvd->key_len;
-	pkt_snd->key = malloc(ntohs(pkt_rcvd->key_len)*sizeof(char));
-	strncpy((char*) pkt_snd->key, (const char*) pkt_rcvd->key, ntohs(pkt_rcvd->key_len));
+	pkt_snd->key = malloc(pkt_rcvd->key_len * sizeof(char));
+	strncpy(pkt_snd->key, pkt_rcvd->key, pkt_rcvd->key_len);
 
 	if (pkt_rcvd->flags & PKT_FLAG_GET) {
-		fprintf(stderr, "Handling a get request\n");
-		htable* item = htable_get(ht, pkt_rcvd->key, pkt_rcvd->key_len);
 		pkt_snd->flags = PKT_FLAG_RPLY;
+		htable* item = htable_get(ht, pkt_rcvd->key, pkt_rcvd->key_len);
 		if (item) {
-			pkt_snd->value = malloc(ntohs(pkt_rcvd->value_len)*sizeof(char));
-			strncpy((char*) pkt_snd->value, (const char*) item->value, ntohs(item->value_len));
+			pkt_snd->value = malloc(item->value_len * sizeof(char));
+			strncpy(pkt_snd->value, item->value, item->value_len);
 			pkt_snd->value_len = item->value_len;
-		} else {
-			pkt_snd->value_len = 0;
-		}
+		} 
 	}
 	else if (pkt_rcvd->flags & PKT_FLAG_SET) {
-		fprintf(stderr, "Handling a set request\n");
 		htable_set(ht, pkt_rcvd->key, pkt_rcvd->key_len, pkt_rcvd->value, pkt_rcvd->value_len);
 		pkt_snd->flags = PKT_FLAG_ACK;
 	} 
 	else if (pkt_rcvd->flags & PKT_FLAG_DEL) {
-		fprintf(stderr, "Handling a del request\n");
 		htable_delete(ht, pkt_rcvd->key, pkt_rcvd->key_len);
 		pkt_snd->flags = PKT_FLAG_ACK;
 	}
 
 	// send response 
-	int status;
-	size_t pkt_buffer_length = 0;
+	send_packet(c->socket, pkt_snd);
 
-	unsigned char* pkt_buffer = packet_serialize(pkt_snd, &pkt_buffer_length);
 	packet_free(pkt_snd);
-	if (pkt_buffer_length == 0) {
-		free(pkt_buffer);
-	}
-
-	fprintf(stderr, "Answer with packet: \"%s\"\n", pkt_buffer);
-	status = sendall(c->socket, pkt_buffer, pkt_buffer_length);
-	free(pkt_buffer);
-	if (status < 0) {
-		fprintf(stderr, "peer::handle_own_request::Failed to send packet to socket %d\n", c->socket);
-		return CB_REMOVE_CLIENT;
-	}
 	return CB_OK;
 }
 
@@ -237,28 +187,23 @@ int handle_own_request(server *srv, client *c, packet *pkt_rcvd) {
  * @return int The callback status
  */
 int answer_lookup(packet *pkt_rcvd, peer *peer_from) {
+	fprintf(stderr, "answer lookup from peer %s\n", peer_from->hostname);
 	/* DONE (Bruno) */
-
 	// build response packet
 	packet* pkt_snd = packet_new();
 	pkt_snd->flags     = PKT_FLAG_CTRL | PKT_FLAG_RPLY;
 	pkt_snd->hash_id   = pkt_rcvd->hash_id;  // requested hash
 	pkt_snd->node_id   = peer_from->node_id; // node_id who can resolve the given hash
 	pkt_snd->node_port = peer_from->port;    // port
-	pkt_snd->node_ip   = ipv4str_to_net_uint32(peer_from->hostname);
-	if (pkt_snd->node_ip == 0) { 
-		packet_free(pkt_snd);
-		return CB_REMOVE_CLIENT;
-	}
+	pkt_snd->node_ip   = peer_get_ip(peer_from);
 	
 	// send response to packet origin
-	peer peer_to = {0};
-	peer_to.port = pkt_snd->node_port;
-	peer_to.hostname = inet_ntoa(*(struct in_addr*) &pkt_rcvd->node_ip); // die Sterne sind wichtig
-	int status = forward(&peer_to, pkt_snd);
+	peer_connect(peer_from);
+	send_packet(peer_from->socket, pkt_snd);
+	peer_disconnect(peer_from);
 
 	packet_free(pkt_snd);
-	return status;
+	return 0;
 }
 
 /**
@@ -303,9 +248,6 @@ int handle_packet_data(server *srv, client *c, packet *p) {
  * @return int The callback status
  */
 int handle_packet_ctrl(server *srv, client *c, packet *p) {
-
-    fprintf(stderr, "Handling control packet...\n");
-
     if (p->flags & PKT_FLAG_LKUP) {
         // we received a lookup request
         if (peer_is_responsible(pred->node_id, self->node_id, p->hash_id)) {
@@ -326,7 +268,7 @@ int handle_packet_ctrl(server *srv, client *c, packet *p) {
 	fprintf(stderr, "Received response from node %s\n", n->hostname);
         for (request *r = get_requests(rt, p->hash_id); r != NULL;
              r = r->next) {
-	    fprintf(stderr, "Let's proxy it into socket %d\n", r->socket);
+	    fprintf(stderr, "Let's proxy into socket %d\n", r->socket);
             proxy_request(srv, r->socket, r->packet, n);
             server_close_socket(srv, r->socket);
         }
@@ -347,11 +289,11 @@ int handle_packet_ctrl(server *srv, client *c, packet *p) {
  * @return int The callback status
  */
 int handle_packet(server *srv, client *c, packet *p) {
-    if (p->flags & PKT_FLAG_CTRL) {
-        return handle_packet_ctrl(srv, c, p);
-    } else {
-        return handle_packet_data(srv, c, p);
-    }
+	if (p->flags & PKT_FLAG_CTRL) {
+		return handle_packet_ctrl(srv, c, p);
+	} else {
+		return handle_packet_data(srv, c, p);
+	}
 }
 
 /**
