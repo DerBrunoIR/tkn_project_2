@@ -13,7 +13,6 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include "client_copy.h"
 #include "itoa.h"
 
 // actual underlying hash table
@@ -56,7 +55,6 @@ int send_packet(int socket, packet* pkt) {
 	size_t pkt_buf_size = 0;
 	unsigned char* pkt_buf = packet_serialize(pkt, &pkt_buf_size);
 	int status = sendall(socket, pkt_buf, pkt_buf_size);
-	fprintf(stderr, "packet_buffer = \"%s\"\n", pkt_buf);
 	free(pkt_buf);
 	return status;
 }
@@ -91,19 +89,19 @@ int forward(peer *p, packet *pack) {
  * @return int The callback status
  */
 int proxy_request(server *srv, int csocket, packet *p, peer *n) {
-	fprintf(stderr, "proxy reqeuest from socket %d to %s\n", csocket, n->hostname);
+	fprintf(stderr, "sending proxy request to %s\n", n->hostname);
 	/* DONE (Bruno) */
 	
 	// do request and receive response
 	peer_connect(n);
 	send_packet(n->socket, p);
+	
 	size_t pkt_buf_size = 0;
 	unsigned char* pkt_buf = recvall(n->socket, &pkt_buf_size);
 	peer_disconnect(n);
 
 	// proxy response 
 	sendall(csocket, pkt_buf, pkt_buf_size);
-	fprintf(stderr, "packet_buffer = \"%s\"\n", pkt_buf);
 	free(pkt_buf);
 	
 	return CB_OK;
@@ -116,7 +114,7 @@ int proxy_request(server *srv, int csocket, packet *p, peer *n) {
  * @return int The callback status
  */
 int lookup_peer(uint16_t hash_id) {
-	fprintf(stderr, "lookup peer with hash_id == %d\n", hash_id);
+	fprintf(stderr, "lookup peer responsible for %d\n", hash_id);
 	/* DONE (Bruno) */
 	// build lookup packet
 	packet* pkt = packet_new();
@@ -145,7 +143,7 @@ int lookup_peer(uint16_t hash_id) {
  * @return int The callback status
  */
 int handle_own_request(server *srv, client *c, packet *pkt_rcvd) {
-	fprintf(stderr, "handle own request on socket %d\n", c->socket);
+	fprintf(stderr, "handle own request");
 	/* TOTEST (Bruno) */
 	// build response packet 
 	packet* pkt_snd = packet_new();
@@ -186,21 +184,22 @@ int handle_own_request(server *srv, client *c, packet *pkt_rcvd) {
  * @param n The peer
  * @return int The callback status
  */
-int answer_lookup(packet *pkt_rcvd, peer *peer_from) {
-	fprintf(stderr, "answer lookup from peer %s\n", peer_from->hostname);
+int answer_lookup(packet *pkt_rcvd, peer *p) {
+	fprintf(stderr, "answer lookup from peer %s\n", p->hostname);
 	/* DONE (Bruno) */
 	// build response packet
+	peer* n = peer_from_packet(pkt_rcvd);
 	packet* pkt_snd = packet_new();
 	pkt_snd->flags     = PKT_FLAG_CTRL | PKT_FLAG_RPLY;
 	pkt_snd->hash_id   = pkt_rcvd->hash_id;  // requested hash
-	pkt_snd->node_id   = peer_from->node_id; // node_id who can resolve the given hash
-	pkt_snd->node_port = peer_from->port;    // port
-	pkt_snd->node_ip   = peer_get_ip(peer_from);
+	pkt_snd->node_id   = p->node_id; // node_id who can resolve the given hash
+	pkt_snd->node_port = p->port;    // port
+	pkt_snd->node_ip   = peer_get_ip(p);
 	
 	// send response to packet origin
-	peer_connect(peer_from);
-	send_packet(peer_from->socket, pkt_snd);
-	peer_disconnect(peer_from);
+	peer_connect(n);
+	send_packet(n->socket, pkt_snd);
+	peer_disconnect(n);
 
 	packet_free(pkt_snd);
 	return 0;
@@ -215,23 +214,23 @@ int answer_lookup(packet *pkt_rcvd, peer *peer_from) {
  * @return int The callback status
  */
 int handle_packet_data(server *srv, client *c, packet *p) {
+	fprintf(stderr, "DATA\n");
     // Hash the key of the <key, value> pair to use for the hash table
     uint16_t hash_id = pseudo_hash(p->key, p->key_len);
     fprintf(stderr, "Hash id: %d\n", hash_id);
-    fprintf(stderr, "Key: %s\n", p->key);
 
     // Forward the packet to the correct peer
     if (peer_is_responsible(pred->node_id, self->node_id, hash_id)) {
         // We are responsible for this key
-        fprintf(stderr, "We are responsible.\n");
+        fprintf(stderr, "This node can answer the request.\n");
         return handle_own_request(srv, c, p);
     } else if (peer_is_responsible(self->node_id, succ->node_id, hash_id)) {
         // Our successor is responsible for this key
-        fprintf(stderr, "Successor's business.\n");
+        fprintf(stderr, "The successor can answer the request.\n");
         return proxy_request(srv, c->socket, p, succ);
     } else {
         // We need to find the peer responsible for this key
-        fprintf(stderr, "No idea! Just looking it up!.\n");
+        fprintf(stderr, "Some other node can answer the request.\n");
         add_request(rt, hash_id, c->socket, p);
         lookup_peer(hash_id); // TODO Add this to open lookup requests
         return CB_OK;
@@ -248,27 +247,29 @@ int handle_packet_data(server *srv, client *c, packet *p) {
  * @return int The callback status
  */
 int handle_packet_ctrl(server *srv, client *c, packet *p) {
+	fprintf(stderr, "CTRL\n");
     if (p->flags & PKT_FLAG_LKUP) {
+	fprintf(stderr, "LKUP for hash_id %d\n", p->hash_id);
         // we received a lookup request
         if (peer_is_responsible(pred->node_id, self->node_id, p->hash_id)) {
             // Our business
-            fprintf(stderr, "Lol! This should not happen!\n");
+            fprintf(stderr, "This node is responsible (should not happen!).\n");
             return answer_lookup(p, self);
         } else if (peer_is_responsible(self->node_id, succ->node_id,
                                        p->hash_id)) {
+            fprintf(stderr, "The successor is responsible.\n");
             return answer_lookup(p, succ);
         } else {
             // Great! Somebody else's job!
-	    fprintf(stderr, "Forwarding to successor: %s\n", succ->hostname);
+	    fprintf(stderr, "Some other node is responsible.\n");
             forward(succ, p);
         }
     } else if (p->flags & PKT_FLAG_RPLY) {
         // Look for open requests and proxy them
         peer *n = peer_from_packet(p);
-	fprintf(stderr, "Received response from node %s\n", n->hostname);
+	fprintf(stderr, "Received lookup answer from node %s:%d.\n", n->hostname, n->port);
         for (request *r = get_requests(rt, p->hash_id); r != NULL;
              r = r->next) {
-	    fprintf(stderr, "Let's proxy into socket %d\n", r->socket);
             proxy_request(srv, r->socket, r->packet, n);
             server_close_socket(srv, r->socket);
         }
@@ -289,6 +290,7 @@ int handle_packet_ctrl(server *srv, client *c, packet *p) {
  * @return int The callback status
  */
 int handle_packet(server *srv, client *c, packet *p) {
+	fprintf(stderr, "Received packet\n");
 	if (p->flags & PKT_FLAG_CTRL) {
 		return handle_packet_ctrl(srv, c, p);
 	} else {
@@ -357,6 +359,8 @@ int main(int argc, char **argv) {
     *ht = NULL;
     *rt = NULL;
 
+    fprintf(stderr, "My Hostname: %s:%d\n", self->hostname, self->port);
+    fprintf(stderr, "My Hash Id: %d\n", self->node_id);
     srv->packet_cb = handle_packet;
     server_run(srv);
     close(srv->socket);
