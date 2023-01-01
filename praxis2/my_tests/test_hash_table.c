@@ -85,6 +85,15 @@ int main() {
 	assert(htable_get(ht, (const unsigned char*) key1, key1len) == NULL);
 	assertItem(htable_get(ht, (const unsigned char*) key2, key2len), key2, key2len, val2, val2len);
 	assertItem(htable_get(ht, (const unsigned char*) key3, key3len), key3, key3len, val2, val2len);
+
+	// test 6, set-get 
+	printf("Test %d\n", 6);
+	const unsigned char key4[] = "Fresh Prince of Bel Air";
+	size_t key4len = 23;
+	const unsigned char value4[] = "This is a long long long long long long long long long long long text";
+	size_t value4len = 69;
+	htable_set(ht, key4, key4len, value4, value4len);
+	assert(0==strncmp((char*) htable_get(ht, key4, key4len)->value, (char*) value4, value4len));
 	
 	printf("Done, all tests successfull");
 	return 0;
