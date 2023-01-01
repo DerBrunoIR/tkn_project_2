@@ -102,6 +102,8 @@ int proxy_request(server *srv, int csocket, packet *p, peer *n) {
 	fprintf(stderr, "received %lu bytes\n", pkt_buf_size);
 
 	packet* prxyp = packet_decode(pkt_buf, pkt_buf_size);
+	fprintf(stderr, prxyp->key);
+	fprintf(stderr, prxyp->value);
 
 	// send response 
 	fprintf(stderr, "send response back to origin\n");
@@ -153,11 +155,12 @@ int handle_own_request(server *srv, client *c, packet *pkt_rcvd) {
 	fprintf(stderr, "handle own request\n");
 	// build response packet 
 	packet* pkt_snd = packet_dup(pkt_rcvd);
-	pkt_snd->flags = PKT_FLAG_ACK | PKT_FLAG_RPLY;
+	pkt_snd->flags = PKT_FLAG_ACK;
 
 	if (pkt_rcvd->flags & PKT_FLAG_GET) {
 		fprintf(stderr, "GET %s\n", pkt_rcvd->key);
 		htable* item = htable_get(ht, pkt_rcvd->key, pkt_rcvd->key_len);
+		pkt_snd->flags |= PKT_FLAG_GET;
 		if (item) {
 			fprintf(stderr, "ITEM found: %s\n", pkt_rcvd->value);
 			free(pkt_snd->value);
@@ -171,9 +174,11 @@ int handle_own_request(server *srv, client *c, packet *pkt_rcvd) {
 	else if (pkt_rcvd->flags & PKT_FLAG_SET) {
 		fprintf(stderr, "SET %s\n", pkt_rcvd->key);
 		htable_set(ht, pkt_rcvd->key, pkt_rcvd->key_len, pkt_rcvd->value, pkt_rcvd->value_len);
+		pkt_snd->flags |= PKT_FLAG_SET;
 	} 
 	else if (pkt_rcvd->flags & PKT_FLAG_DEL) {
 		fprintf(stderr, "DEL %s\n", pkt_rcvd->key);
+		pkt_snd->flags |= PKT_FLAG_DEL;
 		htable_delete(ht, pkt_rcvd->key, pkt_rcvd->key_len);
 	} else {
 		fprintf(stderr, "UNKOWN METHOD %s\n", pkt_rcvd->key);
