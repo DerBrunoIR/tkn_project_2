@@ -102,8 +102,6 @@ int proxy_request(server *srv, int csocket, packet *p, peer *n) {
 	fprintf(stderr, "received %lu bytes\n", pkt_buf_size);
 
 	packet* prxyp = packet_decode(pkt_buf, pkt_buf_size);
-	fprintf(stderr, prxyp->key);
-	fprintf(stderr, prxyp->value);
 
 	// send response 
 	fprintf(stderr, "send response back to origin\n");
@@ -178,8 +176,8 @@ int handle_own_request(server *srv, client *c, packet *pkt_rcvd) {
 	} 
 	else if (pkt_rcvd->flags & PKT_FLAG_DEL) {
 		fprintf(stderr, "DEL %s\n", pkt_rcvd->key);
-		pkt_snd->flags |= PKT_FLAG_DEL;
 		htable_delete(ht, pkt_rcvd->key, pkt_rcvd->key_len);
+		pkt_snd->flags |= PKT_FLAG_DEL;
 	} else {
 		fprintf(stderr, "UNKOWN METHOD %s\n", pkt_rcvd->key);
 	}
