@@ -13,7 +13,6 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include "itoa.h"
 
 // actual underlying hash table
 htable **ht = NULL;
@@ -100,8 +99,6 @@ int proxy_request(server *srv, int csocket, packet *p, peer *n) {
 	unsigned char* pkt_buf = recvall(n->socket, &pkt_buf_size);
 	peer_disconnect(n);
 	fprintf(stderr, "received %lu bytes\n", pkt_buf_size);
-
-	packet* prxyp = packet_decode(pkt_buf, pkt_buf_size);
 
 	// send response 
 	fprintf(stderr, "send response back to origin\n");
