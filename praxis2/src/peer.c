@@ -165,9 +165,16 @@ int handle_own_request(server *srv, client *c, packet *pkt_rcvd) {
 	strncpy((char*) pkt_snd->key,(const char*) pkt_rcvd->key, pkt_rcvd->key_len);
 	fprintf(stderr, "4\n");
 
+	// copy key from packet and append a terminator
+	int key_len = pkt_rcvd->key_len;
+	char* key = malloc((key_len+1) * sizeof(char));
+	strncpy(key, (char*) pkt_rcvd->key, key_len);
+	key[key_len] = '\0';
+
 	if (pkt_rcvd->flags & PKT_FLAG_GET) {
-		fprintf(stderr, "GET %s\n", pkt_rcvd->key);
-		htable* item = htable_get(ht, pkt_rcvd->key, pkt_rcvd->key_len);
+		fprintf(stderr, "GET %s\n", key);
+
+		htable* item = htable_get(ht, (const unsigned char*) key, key_len);
 		pkt_snd->flags |= PKT_FLAG_GET;
 		// cpy value from item to snd
 		if (item) {
@@ -180,22 +187,23 @@ int handle_own_request(server *srv, client *c, packet *pkt_rcvd) {
 		}
 	}
 	else if (pkt_rcvd->flags & PKT_FLAG_SET) {
-		fprintf(stderr, "SET %s\n", pkt_rcvd->key);
-		htable_set(ht, pkt_rcvd->key, pkt_rcvd->key_len, pkt_rcvd->value, pkt_rcvd->value_len);
+		fprintf(stderr, "SET %s\n", key);
+		htable_set(ht,(const unsigned char*) key, key_len, pkt_rcvd->value, pkt_rcvd->value_len);
 		pkt_snd->flags |= PKT_FLAG_SET;
 	} 
 	else if (pkt_rcvd->flags & PKT_FLAG_DEL) {
-		fprintf(stderr, "DEL %s\n", pkt_rcvd->key);
-		htable_delete(ht, pkt_rcvd->key, pkt_rcvd->key_len);
+		fprintf(stderr, "DEL %s\n", key);
+		htable_delete(ht,(const unsigned char*) key, key_len);
 		pkt_snd->flags |= PKT_FLAG_DEL;
 	} else {
-		fprintf(stderr, "UNKOWN METHOD %s\n", pkt_rcvd->key);
+		fprintf(stderr, "UNKOWN METHOD %s\n", key);
 	}
 
 	// send response 
 	send_packet(c->socket, pkt_snd);
 	server_close_socket(srv, c->socket);
 
+	free(key);
 	packet_free(pkt_snd);
 	return CB_OK;
 }
@@ -318,7 +326,7 @@ int handle_packet(server *srv, client *c, packet *p) {
 	if (p->flags & PKT_FLAG_CTRL) {
 		return handle_packet_ctrl(srv, c, p);
 	} else {
-		fprintf(stderr, "requested key: %s\n", p->key);
+		fprintf(stderr, "requested key(%d): \"%s\"\n", p->key_len, p->key);
 		return handle_packet_data(srv, c, p);
 	}
 }
