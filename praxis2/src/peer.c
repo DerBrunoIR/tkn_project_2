@@ -152,19 +152,29 @@ int handle_own_request(server *srv, client *c, packet *pkt_rcvd) {
 	/* TOTEST (Bruno) */
 	fprintf(stderr, "handle own request\n");
 	// build response packet 
-	packet* pkt_snd = packet_dup(pkt_rcvd);
+	fprintf(stderr, "packet_new();\n");
+	packet* pkt_snd = packet_new();
+	fprintf(stderr, "setting ack flag\n");
 	pkt_snd->flags = PKT_FLAG_ACK;
+	// cpy key form rcvd to snd
+	fprintf(stderr, "cpy key 1");
+	pkt_snd->key_len = pkt_rcvd->key_len;
+	fprintf(stderr, "2");
+	pkt_snd->key = malloc(pkt_snd->key_len * sizeof(char));
+	fprintf(stderr, "3");
+	strncpy((char*) pkt_snd->key,(const char*) pkt_rcvd->key, pkt_rcvd->key_len);
+	fprintf(stderr, "4\n");
 
 	if (pkt_rcvd->flags & PKT_FLAG_GET) {
 		fprintf(stderr, "GET %s\n", pkt_rcvd->key);
 		htable* item = htable_get(ht, pkt_rcvd->key, pkt_rcvd->key_len);
 		pkt_snd->flags |= PKT_FLAG_GET;
+		// cpy value from item to snd
 		if (item) {
 			fprintf(stderr, "ITEM found: %s\n", pkt_rcvd->value);
-			free(pkt_snd->value);
 			pkt_snd->value_len = item->value_len;
 			pkt_snd->value = malloc(item->value_len * sizeof(char));
-			strncpy(pkt_snd->value, item->value, item->value_len);
+			strncpy((char*)pkt_snd->value, (const char*)item->value, item->value_len);
 		} else {
 			fprintf(stderr, "ITEM not found\n");
 		}
@@ -308,6 +318,7 @@ int handle_packet(server *srv, client *c, packet *p) {
 	if (p->flags & PKT_FLAG_CTRL) {
 		return handle_packet_ctrl(srv, c, p);
 	} else {
+		fprintf(stderr, "requested key: %s\n", p->key);
 		return handle_packet_data(srv, c, p);
 	}
 }
